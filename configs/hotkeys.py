@@ -1,0 +1,23 @@
+double_hotkeys = [
+    ("alt+c", "Copy"),
+    ("ctrl+v", "Paste"),
+    ("ctrl+x", "Cut"),
+    ("ctrl+d", "Tab"),
+    ("ctrl+a", "Highlight All"),
+    ("ctrl+e", "Search Panel"),
+    ("ctrl+l", "Search Panel"),
+    ("ctrl+z", "Undo"),
+    ("ctrl+f", "Find"),
+    ("ctrl+n", "Open New Browser Window"),
+    ("ctrl+o", "Open Tab with Local File"),
+    ("ctrl+p", "Print"),
+    ("ctrl+r", "Update Page"),
+    ("ctrl+w", "Close Tab"),
+    ("ctrl+h", "Open History"),
+    ("ctrl+t", "Open New Tab"),
+    ("ctrl+right", "Go Back"),
+    ("ctrl+left", "Go Next"),
+    ("ctrl+up", "Go to the Beginning"),
+    ("ctrl+down", "Go to the End"),
+    ("ctrl+esc", "Open Windows Bar"),  # open windows bar
+]
