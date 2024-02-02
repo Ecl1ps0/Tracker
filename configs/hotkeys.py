@@ -1,5 +1,5 @@
 double_hotkeys = [
-    ("alt+c", "Copy"),
+    ("ctrl+c", "Copy"),
     ("ctrl+v", "Paste"),
     ("ctrl+x", "Cut"),
     ("ctrl+d", "Tab"),
