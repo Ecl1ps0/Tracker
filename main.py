@@ -10,16 +10,16 @@ from configs.hotkeys import double_hotkeys
 from configs.languages_mapping import english_to_russian_mapping
 
 
-def on_press(key: Key) -> None:
+def on_press(key: Key | KeyCode) -> None:
     try:
         print(key.name)
     except AttributeError:
         current_language = get_current_language_hash()
-        char_value = getattr(key, 'char', None)
+
         if current_language == '0x419':
-            print(english_to_russian_mapping[str(char_value)])
+            print(english_to_russian_mapping[str(key.char)])
         else:
-            print(str(char_value))
+            print(str(key.char))
 
 
 def on_move(x: int, y: int) -> None:
