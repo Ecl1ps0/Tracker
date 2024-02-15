@@ -1,0 +1,14 @@
+[project]
+name = "Tracker"
+version = "0.0.1"
+authors = [
+  { name="Tsoy Daniil", email="tsoy.daniil.an@gmail.com" },
+]
+description = "Keylogger for educational purposes"
+readme = "README.md"
+requires-python = ">=3.11"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
