@@ -6,7 +6,7 @@ import pyperclip
 
 
 class ClipboardTracker(threading.Thread):
-    def __init__(self, callback: Callable[..., None], pause: float = 5.):
+    def __init__(self, callback: Callable[..., None] = None, pause: float = 5.):
         super(ClipboardTracker, self).__init__()
         self._callback = callback
         self._pause = pause

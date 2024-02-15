@@ -19,5 +19,9 @@ double_hotkeys = [
     ("ctrl+left", "Go Next"),
     ("ctrl+up", "Go to the Beginning"),
     ("ctrl+down", "Go to the End"),
-    ("ctrl+esc", "Open Windows Bar"),  # open windows bar
+    ("ctrl+esc", "Open Windows Bar"),
+    ("ctrl+tab", "Change tab"),
+    ("alt+tab", "Change window"),
+    ("cmd+d", "Close all windows"),
+    ("cmd+tab", "Choose workspace"),
 ]
