@@ -4,8 +4,11 @@ import time
 from pynput.keyboard import Listener, Key, KeyCode
 
 from configs.languages_mapping import english_to_russian_mapping, russian_to_english_mapping
+from configs.logger import get_logger
 from loggers.Logger import Logger
 from loggers.LoggerEnum import LoggerEnum
+
+logger = get_logger(__name__)
 
 
 class KeyboardLogger(Logger):
@@ -37,7 +40,7 @@ class KeyboardLogger(Logger):
         end_time = time.time()
         elapsed_time = end_time - self.start_time
 
-        with open("report.txt", "a") as file:
+        with open(".\\report.txt", "a") as file:
             if isinstance(key, Key):
                 file.write(key.name + "\n")
                 print(key.name)
@@ -46,11 +49,13 @@ class KeyboardLogger(Logger):
                     self.typed_words += 1
                     wpm = (self.typed_words / elapsed_time) * 60
                     file.write(f"WPM={wpm:.2f}\n")
+                    logger.info(f"WPM={wpm:.2f}")
                     print(f"WPM={wpm:.2f}")
 
                     end_word_time = time.time()
                     word_typing_pause = end_word_time - self.start_word_time
                     file.write(f"Pause between words = {word_typing_pause:.2f}\n")
+                    logger.info(f"Pause between words = {word_typing_pause:.2f}")
                     print(f"Pause between words = {word_typing_pause:.2f}")
                     self.start_word_time = time.time()
 
@@ -58,11 +63,13 @@ class KeyboardLogger(Logger):
                     self.typed_rows += 1
                     rpm = (self.typed_rows / elapsed_time) * 60
                     file.write(f"RPM={rpm:.2f}\n")
+                    logger.info(f"RPM={rpm:.2f}")
                     print(f"RPM={rpm:.2f}")
 
                     end_row_time = time.time()
                     row_typing_pause = end_row_time - self.start_row_time
                     file.write(f"Pause between rows = {row_typing_pause:.2f}\n")
+                    logger.info(f"Pause between rows = {row_typing_pause:.2f}")
                     print(f"Pause between rows = {row_typing_pause:.2f}")
                     self.start_row_time = time.time()
 
@@ -72,17 +79,19 @@ class KeyboardLogger(Logger):
                 if self.initial_language == '0x419' and current_language == '0x409':
                     try:
                         file.write(russian_to_english_mapping[str(key.char)] + "\n")
+                        logger.info(russian_to_english_mapping[str(key.char)])
                         print(russian_to_english_mapping[str(key.char)])
                     except KeyError:
-                        pass
+                        logger.info(f"Unknown KeyCode: {key}")
                 elif self.initial_language == '0x409' and current_language == '0x419':
                     try:
                         file.write(english_to_russian_mapping[str(key.char)] + "\n")
                         print(english_to_russian_mapping[str(key.char)])
                     except KeyError:
-                        pass
+                        logger.info(f"Unknown KeyCode: {key}")
                 else:
                     file.write(str(key.char) + "\n")
+                    logger.info(str(key.char))
                     print(str(key.char))
 
                 self.typed_characters += 1
@@ -91,11 +100,13 @@ class KeyboardLogger(Logger):
                     self.typed_sentences += 1
                     spm = (self.typed_sentences / elapsed_time) * 60
                     file.write(f"SPM={spm:.2f}\n")
+                    logger.info(f"SPM={spm:.2f}")
                     print(f"SPM={spm:.2f}")
 
                 if elapsed_time > 0:
                     cpm = (self.typed_characters / elapsed_time) * 60
                     file.write(f"CPM={cpm:.2f}\n")
+                    logger.info(f"CPM={cpm:.2f}")
                     print(f"CPM={cpm:.2f}")
 
     def __set_initial_values(self) -> None:
