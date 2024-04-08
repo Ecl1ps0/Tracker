@@ -6,32 +6,28 @@ from pynput.keyboard import Listener, Key, KeyCode
 from configs.languages_mapping import english_to_russian_mapping, russian_to_english_mapping
 from configs.logger import get_logger
 from loggers.Logger import Logger
-from loggers.LoggerEnum import LoggerEnum
 
 logger = get_logger(__name__)
 
 
 class KeyboardLogger(Logger):
     def __init__(self):
-        super(KeyboardLogger, self).__init__(device=LoggerEnum.Keyboard)
+        super(KeyboardLogger, self).__init__()
 
-        self.start_time = None
-        self.start_word_time = None
-        self.start_row_time = None
+        self.start_time = time.time()
+        self.start_word_time = time.time()
+        self.start_row_time = time.time()
 
-        self.initial_language = None
+        self.initial_language = self.__get_current_language_hash()
 
         self.typed_characters = 0
         self.typed_words = 0
         self.typed_sentences = 0
         self.typed_rows = 0
 
-    def create_listener(self) -> None:
+    def create_listener(self) -> Listener:
         self.listener = Listener(on_press=self.__on_press, on_release=self.__on_realese)
-
-    def run(self) -> None:
-        self.listener.start()
-        self.__set_initial_values()
+        return self.listener
 
     def __on_press(self, key: Key | KeyCode) -> None:
         pass
@@ -108,19 +104,6 @@ class KeyboardLogger(Logger):
                     file.write(f"CPM={cpm:.2f}\n")
                     logger.info(f"CPM={cpm:.2f}")
                     print(f"CPM={cpm:.2f}")
-
-    def __set_initial_values(self) -> None:
-        if self.initial_language is None:
-            self.initial_language = self.__get_current_language_hash()
-
-        if self.start_time is None:
-            self.start_time = time.time()
-
-        if self.start_word_time is None:
-            self.start_word_time = time.time()
-
-        if self.start_row_time is None:
-            self.start_row_time = time.time()
 
     @staticmethod
     def __get_current_language_hash() -> str:
