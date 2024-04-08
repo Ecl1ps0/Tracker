@@ -3,17 +3,16 @@ from configs.logger import get_logger
 from loggers.Logger import Logger
 from pynput.mouse import Listener, Button
 
-from loggers.LoggerEnum import LoggerEnum
-
 logger = get_logger(__name__)
 
 
 class MouseLogger(Logger):
     def __init__(self):
-        super(MouseLogger, self).__init__(device=LoggerEnum.Mouse)
+        super(MouseLogger, self).__init__()
 
-    def create_listener(self) -> None:
+    def create_listener(self) -> Listener:
         self.listener = Listener(on_move=self.__on_move, on_scroll=self.__on_scroll, on_click=self.__on_click)
+        return self.listener
 
     @staticmethod
     def __on_move(x: int, y: int) -> None:
