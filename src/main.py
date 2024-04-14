@@ -1,61 +1,65 @@
 import asyncio
 
-import keyboard
 import requests
+import websockets
+from websockets import WebSocketServerProtocol
 
 from ClipboardTracker import ClipboardTracker
-from WebSocketClient import WebSocketClient
-from configs.file_writers import save_to_report, save_clipboard_content
-from configs.hotkeys import double_hotkeys
+from Login import Login
+from configs.file_writers import save_clipboard_content
+from configs.hotkeys import register_hotkeys
 from configs.logger import get_logger
 from loggers.KeyboardLogger import KeyboardLogger
 from loggers.MouseLogger import MouseLogger
 
 
+async def handler(websocket: WebSocketServerProtocol, path: str) -> None:
+    async for message in websocket:
+        print(f"Received from client: {message}")
+        await websocket.send("Message received by server")
+
+
 async def main():
     logger = get_logger(__name__)
 
+    client = Login()
+    client.start_login()
+
+    logger.info("Successfully logged in!")
     logger.info("Start tracking actions")
-    for shortcut, name in double_hotkeys:
-        keyboard.add_hotkey(shortcut,
-                            lambda shortcut_name: save_to_report(shortcut_name, path=".\\report.txt"),
-                            args=(name,))
+    register_hotkeys()
 
-    socket = WebSocketClient("ws://localhost:8080/connection/ws")
-    await socket.connect()
+    async with (websockets.connect("ws://localhost:8080/connection/ws") as socket,
+                websockets.serve(handler, "localhost", 8001) as server):
+        keyboard_logger = KeyboardLogger()
+        mouse_logger = MouseLogger()
 
-    keyboard_logger = KeyboardLogger()
+        loggers = [ClipboardTracker(save_clipboard_content), keyboard_logger.create_listener(),
+                   mouse_logger.create_listener()]
 
-    mouse_logger = MouseLogger()
+        try:
+            await socket.send("start")
+            start_resp = await socket.recv()
+            print(start_resp)
+            logger.info(start_resp)
 
-    loggers = [ClipboardTracker(save_clipboard_content), keyboard_logger.create_listener(), mouse_logger.create_listener()]
+            for tracker in loggers:
+                logger.info(f"Start {type(tracker).__name__}")
+                tracker.start()
 
-    try:
-        start_resp = await socket.send_message("start")
-        print(start_resp)
-        logger.info(start_resp)
+            await asyncio.Future()
 
-        for tracker in loggers:
-            logger.info(f"Start {type(tracker).__name__}")
-            tracker.start()
+        except asyncio.CancelledError:
+            for tracker in loggers:
+                logger.info(f"Stop {type(tracker).__name__}")
+                tracker.stop()
 
-        logger.info("Clipboard, mouse and keyboard tracker have started")
+            await socket.send("finish")
+            finish_resp = await socket.recv()
+            print(finish_resp)
+            logger.info(finish_resp)
 
-        while True:
-            await asyncio.sleep(1)
-
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        for tracker in loggers:
-            logger.info(f"Start {type(tracker).__name__}")
-            tracker.stop()
-
-        finish_resp = await socket.send_message("finish")
-        print(finish_resp)
-        logger.info(finish_resp)
-
-        await socket.disconnect()
-
-        logger.info("Stop tracking")
+            logger.info("Stop tracking")
 
     json_data = {
         "files": [
