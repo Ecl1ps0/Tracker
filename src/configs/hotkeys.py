@@ -1,3 +1,7 @@
+import keyboard
+
+from configs.file_writers import save_to_report
+
 double_hotkeys = [
     ("ctrl+c", "Copy"),
     ("ctrl+v", "Paste"),
@@ -25,3 +29,8 @@ double_hotkeys = [
     ("cmd+d", "Close all windows"),
     ("cmd+tab", "Choose workspace"),
 ]
+
+
+def register_hotkeys() -> None:
+    for shortcut, name in double_hotkeys:
+        keyboard.add_hotkey(shortcut, save_to_report, args=(name, ".\\report.txt"))
