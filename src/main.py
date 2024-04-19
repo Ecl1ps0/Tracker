@@ -2,21 +2,17 @@ import asyncio
 
 import requests
 import websockets
-from websockets import WebSocketServerProtocol
 
 from ClipboardTracker import ClipboardTracker
 from Login import Login
+from loggers.LoggerHandler import LoggerHandler
+from websocket.WebsocketClient import Client
+from websocket.WebsocketHandler import WebsocketHandler
 from configs.file_writers import save_clipboard_content
 from configs.hotkeys import register_hotkeys
 from configs.logger import get_logger
 from loggers.KeyboardLogger import KeyboardLogger
 from loggers.MouseLogger import MouseLogger
-
-
-async def handler(websocket: WebSocketServerProtocol, path: str) -> None:
-    async for message in websocket:
-        print(f"Received from client: {message}")
-        await websocket.send("Message received by server")
 
 
 async def main():
@@ -25,41 +21,41 @@ async def main():
     client = Login()
     client.start_login()
 
+    websocket_handler = WebsocketHandler()
+
     logger.info("Successfully logged in!")
     logger.info("Start tracking actions")
     register_hotkeys()
 
+    keyboard_logger = KeyboardLogger().create_listener()
+    mouse_logger = MouseLogger().create_listener()
+    clipboard_logger = ClipboardTracker(save_clipboard_content)
+
+    loggers = [clipboard_logger, keyboard_logger, mouse_logger]
+
+    loggers_handler = LoggerHandler(loggers, logger)
+
     async with (websockets.connect("ws://localhost:8080/connection/ws") as socket,
-                websockets.serve(handler, "localhost", 8001) as server):
-        keyboard_logger = KeyboardLogger()
-        mouse_logger = MouseLogger()
+                websockets.serve(websocket_handler.handler, "localhost", 8001)):
+        client = Client(socket)
 
-        loggers = [ClipboardTracker(save_clipboard_content), keyboard_logger.create_listener(),
-                   mouse_logger.create_listener()]
+        await websocket_handler.start_event.wait()
 
-        try:
-            await socket.send("start")
-            start_resp = await socket.recv()
-            print(start_resp)
-            logger.info(start_resp)
+        start_resp = await client.send_msg("start")
+        print(start_resp)
+        logger.info(start_resp)
 
-            for tracker in loggers:
-                logger.info(f"Start {type(tracker).__name__}")
-                tracker.start()
+        loggers_handler.start_tracking()
 
-            await asyncio.Future()
+        await websocket_handler.end_event.wait()
 
-        except asyncio.CancelledError:
-            for tracker in loggers:
-                logger.info(f"Stop {type(tracker).__name__}")
-                tracker.stop()
+        loggers_handler.stop_tracking()
 
-            await socket.send("finish")
-            finish_resp = await socket.recv()
-            print(finish_resp)
-            logger.info(finish_resp)
+        finish_resp = await client.send_msg("finish")
+        print(finish_resp)
+        logger.info(finish_resp)
 
-            logger.info("Stop tracking")
+        logger.info("Stop tracking")
 
     json_data = {
         "files": [
