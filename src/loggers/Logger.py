@@ -8,9 +8,3 @@ class Logger(ABC):
     @abstractmethod
     def create_listener(self) -> None:
         pass
-
-    def start(self) -> None:
-        self.listener.start()
-
-    def stop(self) -> None:
-        self.listener.stop()
