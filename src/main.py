@@ -27,45 +27,48 @@ async def main():
     logger.info("Start tracking actions")
     register_hotkeys()
 
-    keyboard_logger = KeyboardLogger().create_listener()
-    mouse_logger = MouseLogger().create_listener()
-    clipboard_logger = ClipboardTracker(save_clipboard_content)
+    while True:
+        keyboard_logger = KeyboardLogger().create_listener()
+        mouse_logger = MouseLogger().create_listener()
+        clipboard_logger = ClipboardTracker(save_clipboard_content)
 
-    loggers = [clipboard_logger, keyboard_logger, mouse_logger]
+        loggers = [clipboard_logger, keyboard_logger, mouse_logger]
 
-    loggers_handler = LoggerHandler(loggers, logger)
+        loggers_handler = LoggerHandler(loggers, logger)
 
-    async with (websockets.connect("ws://localhost:8080/connection/ws") as socket,
-                websockets.serve(websocket_handler.handler, "localhost", 8001)):
-        client = Client(socket)
+        async with (websockets.connect("ws://localhost:8080/connection/ws") as socket,
+                    websockets.serve(websocket_handler.handler, "localhost", 8001)):
+            client = Client(socket)
 
-        await websocket_handler.start_event.wait()
+            await websocket_handler.start_event.wait()
 
-        start_resp = await client.send_msg("start")
-        print(start_resp)
-        logger.info(start_resp)
+            start_resp = await client.send_msg("start")
+            print(start_resp)
+            logger.info(start_resp)
 
-        loggers_handler.start_tracking()
+            loggers_handler.start_tracking()
 
-        await websocket_handler.end_event.wait()
+            await websocket_handler.end_event.wait()
+            websocket_handler.start_event.clear()
+            websocket_handler.end_event.clear()
 
-        loggers_handler.stop_tracking()
+            loggers_handler.stop_tracking()
 
-        finish_resp = await client.send_msg("finish")
-        print(finish_resp)
-        logger.info(finish_resp)
+            finish_resp = await client.send_msg("finish")
+            print(finish_resp)
+            logger.info(finish_resp)
 
-        logger.info("Stop tracking")
+            logger.info("Stop tracking")
 
-    json_data = {
-        "files": [
-            {"name": "logs", "data": open('logs.txt').read()},
-            {"name": "report", "data": open('report.txt').read()},
-            {"name": "clipboard", "data": open('clipboard.txt').read()},
-        ]
-    }
+        json_data = {
+            "files": [
+                {"name": "logs", "data": open('logs.txt').read()},
+                {"name": "report", "data": open('report.txt').read()},
+                {"name": "clipboard", "data": open('clipboard.txt').read()},
+            ]
+        }
 
-    requests.post("http://localhost:8080/connection/fileUpload", json=json_data)
+        requests.post("http://localhost:8080/connection/fileUpload", json=json_data)
 
 
 if __name__ == '__main__':
