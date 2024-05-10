@@ -10,7 +10,7 @@ fmt = {
 logging.basicConfig(
     filename="logs.txt",
     filemode="w",
-    level=logging.WARNING,
+    level=logging.INFO,
     format=str(fmt)
 )
 
