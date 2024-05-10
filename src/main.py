@@ -1,4 +1,5 @@
 import asyncio
+import json
 
 import requests
 import websockets
@@ -38,11 +39,16 @@ async def main():
 
         async with (websockets.connect("ws://localhost:8080/connection/ws") as socket,
                     websockets.serve(websocket_handler.handler, "localhost", 8001)):
-            client = Client(socket)
+            websocket_client = Client(socket)
 
             await websocket_handler.start_event.wait()
 
-            start_resp = await client.send_msg("start")
+            start_data = {
+                "StudentTaskID": websocket_handler.websocket_message.get("StudentTaskID"),
+                "Message": "start"
+            }
+
+            start_resp = await websocket_client.send_msg(json.dumps(start_data))
             print(start_resp)
             logger.info(start_resp)
 
@@ -54,21 +60,29 @@ async def main():
 
             loggers_handler.stop_tracking()
 
-            finish_resp = await client.send_msg("finish")
+            finish_data = {
+                "StudentTaskID": websocket_handler.websocket_message.get("StudentTaskID"),
+                "Message": "finish"
+            }
+
+            finish_resp = await websocket_client.send_msg(json.dumps(finish_data))
             print(finish_resp)
             logger.info(finish_resp)
 
             logger.info("Stop tracking")
 
         json_data = {
-            "files": [
+            "StudentTaskID": websocket_handler.websocket_message.get("StudentTaskID"),
+            "Files": [
                 {"name": "logs", "data": open('logs.txt').read()},
                 {"name": "report", "data": open('report.txt').read()},
                 {"name": "clipboard", "data": open('clipboard.txt').read()},
             ]
         }
 
-        requests.post("http://localhost:8080/connection/fileUpload", json=json_data)
+        requests.post("http://localhost:8080/api/report/createReport",
+                      json=json_data,
+                      headers={"Authorization": f"Bearer {client.token}"})
 
 
 if __name__ == '__main__':
