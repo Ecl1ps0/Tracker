@@ -1,4 +1,4 @@
-from configs.file_writers import save_to_report
+from configs.file_writers import save_to_report, save_to_report_with_time
 from configs.logger import get_logger
 from loggers.Logger import Logger
 from pynput.mouse import Listener, Button
@@ -16,17 +16,17 @@ class MouseLogger(Logger):
 
     @staticmethod
     def __on_move(x: int, y: int) -> None:
-        save_to_report('Pointer moved to {0}'.format((x, y)), path=".\\report.txt")
+        save_to_report_with_time('Pointer moved to {0}'.format((x, y)))
         logger.info('Pointer moved to {0}'.format((x, y)))
         print('Pointer moved to {0}'.format(
             (x, y)))
 
     @staticmethod
     def __on_click(x: int, y: int, button: Button, pressed: bool) -> None:
-        save_to_report('{0} at {1}, on button: {2}'.format(
+        save_to_report_with_time('{0} at {1}, on button: {2}'.format(
             'Pressed' if pressed else 'Released',
             (x, y),
-            button), path=".\\report.txt")
+            button))
         logger.info('{0} at {1}, on button: {2}'.format(
             'Pressed' if pressed else 'Released',
             (x, y),
@@ -38,9 +38,9 @@ class MouseLogger(Logger):
 
     @staticmethod
     def __on_scroll(x: int, y: int, dx: int, dy: int) -> None:
-        save_to_report('Scrolled {0} at {1}'.format(
+        save_to_report_with_time('Scrolled {0} at {1}'.format(
             'down' if dy < 0 else 'up',
-            (x, y)), path=".\\report.txt")
+            (x, y)))
         logger.info('Scrolled {0} at {1}'.format(
             'down' if dy < 0 else 'up',
             (x, y)))
