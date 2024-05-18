@@ -8,7 +8,7 @@ fmt = {
 }
 
 logging.basicConfig(
-    filename="logs.txt",
+    filename=".\\temp\\logs.txt",
     filemode="w",
     level=logging.INFO,
     format=str(fmt)
